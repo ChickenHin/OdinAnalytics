@@ -12,14 +12,14 @@ name: ci-windows
 
 on:
   # run daily as 0000 UTC scheduled job or when any branch is pushed to
-  schedule:
-    - cron: "0 0 * * *"
-  # run on branch push
-  push:
-    paths-ignore:
-      # sheets + VS solution files don't affect the CMake build so ignore them
-      - "sheets/**"
-      - "solutions/**"
+  # schedule:
+  #   - cron: "0 0 * * *"
+  # # run on branch push
+  # push:
+  #   paths-ignore:
+  #     # sheets + VS solution files don't affect the CMake build so ignore them
+  #     - "sheets/**"
+  #     - "solutions/**"
       # README.md doesn't affect CMake build either
       - README.md
   # run on manual request
@@ -210,49 +210,49 @@ jobs:
             -C Release "-j$env:NUMBER_OF_PROCESSORS" --output-on-failure
       # install Runtime and Development components separately
       # note: only good as a smoke test
-      - name: Install Runtime
-        run: |
-          # load helper script for OaPlatformTranslate
-          . .\tools\common.ps1
-          # convert Win32 -> x86 for build directory + install
-          cmake --install `
-            build_windows_$(OaPlatformTranslate "${{ matrix.arch }}") `
-            --prefix "${{ env.ODIN_INSTALL_ROOT }}" `
-            --config Release `
-            --component Runtime
-      - name: Install Development
-        run: |
-          # same as above but install Development component
-          . .\tools\common.ps1
-          cmake --install `
-            build_windows_$(OaPlatformTranslate "${{ matrix.arch }}") `
-            --prefix "${{ env.ODIN_INSTALL_ROOT }}" `
-            --config Release `
-            --component Development
-      # run CPack to get the ZIP archive
-      - name: Package
-        id: cpack-package
-        # run for all non-unity jobs
-        if: ${{ matrix.unity == 'off' }}
-        run: |
-          # include PowerShell helpers
-          . .\tools\common.ps1
-          $build_dir = "build_windows_$(OaPlatformTranslate "${{ matrix.arch }}")"
-          # note: for multi-config generators best to specify config with -C
-          cpack -B $build_dir\packages -G ZIP -C Release `
-            --config $build_dir\CPackConfig.cmake
-          # record .zip path in output for upload step
-          # note: need to explicitly include packaging directory again
-          $cpack_zip = "$build_dir\packages\"
-          $cpack_zip += "$(Get-ChildItem -Name $build_dir\packages\*.zip)"
-          echo "cpack-zip=$cpack_zip" >> "$env:GITHUB_OUTPUT"
-      # upload packages to the workflow page
-      # note: only done when run on schedule for non-unity jobs
-      - name: Upload ZIP
-        if: ${{ github.event_name == 'schedule' && matrix.unity == 'off' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: nightly-${{ matrix.os }}-zip
-          path: ${{ steps.cpack-package.outputs.cpack-zip }}
-          # already archived so don't archive
-          archive: false
+      # - name: Install Runtime
+      #   run: |
+      #     # load helper script for OaPlatformTranslate
+      #     . .\tools\common.ps1
+      #     # convert Win32 -> x86 for build directory + install
+      #     cmake --install `
+      #       build_windows_$(OaPlatformTranslate "${{ matrix.arch }}") `
+      #       --prefix "${{ env.ODIN_INSTALL_ROOT }}" `
+      #       --config Release `
+      #       --component Runtime
+      # - name: Install Development
+      #   run: |
+      #     # same as above but install Development component
+      #     . .\tools\common.ps1
+      #     cmake --install `
+      #       build_windows_$(OaPlatformTranslate "${{ matrix.arch }}") `
+      #       --prefix "${{ env.ODIN_INSTALL_ROOT }}" `
+      #       --config Release `
+      #       --component Development
+      # # run CPack to get the ZIP archive
+      # - name: Package
+      #   id: cpack-package
+      #   # run for all non-unity jobs
+      #   if: ${{ matrix.unity == 'off' }}
+      #   run: |
+      #     # include PowerShell helpers
+      #     . .\tools\common.ps1
+      #     $build_dir = "build_windows_$(OaPlatformTranslate "${{ matrix.arch }}")"
+      #     # note: for multi-config generators best to specify config with -C
+      #     cpack -B $build_dir\packages -G ZIP -C Release `
+      #       --config $build_dir\CPackConfig.cmake
+      #     # record .zip path in output for upload step
+      #     # note: need to explicitly include packaging directory again
+      #     $cpack_zip = "$build_dir\packages\"
+      #     $cpack_zip += "$(Get-ChildItem -Name $build_dir\packages\*.zip)"
+      #     echo "cpack-zip=$cpack_zip" >> "$env:GITHUB_OUTPUT"
+      # # upload packages to the workflow page
+      # # note: only done when run on schedule for non-unity jobs
+      # - name: Upload ZIP
+      #   if: ${{ github.event_name == 'schedule' && matrix.unity == 'off' }}
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: nightly-${{ matrix.os }}-zip
+      #     path: ${{ steps.cpack-package.outputs.cpack-zip }}
+      #     # already archived so don't archive
+      #     archive: false
