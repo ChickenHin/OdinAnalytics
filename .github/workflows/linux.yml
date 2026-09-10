@@ -11,18 +11,6 @@
 name: ci-linux
 
 on:
-  # run daily as 0000 UTC scheduled job or when any branch is pushed to
-  # schedule:
-  #   - cron: "0 0 * * *"
-  # # run on branch push
-  # push:
-  #   paths-ignore:
-  #     # sheets + VS solution files don't affect the CMake build so ignore them
-  #     - "sheets/**"
-  #     - "solutions/**"
-      # README.md doesn't affect CMake build either
-      - README.md
-  # run on manual request
   workflow_dispatch:
 
 env:
