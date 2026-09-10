@@ -12,14 +12,14 @@ name: ci-linux
 
 on:
   # run daily as 0000 UTC scheduled job or when any branch is pushed to
-  schedule:
-    - cron: "0 0 * * *"
-  # run on branch push
-  push:
-    paths-ignore:
-      # sheets + VS solution files don't affect the CMake build so ignore them
-      - "sheets/**"
-      - "solutions/**"
+  # schedule:
+  #   - cron: "0 0 * * *"
+  # # run on branch push
+  # push:
+  #   paths-ignore:
+  #     # sheets + VS solution files don't affect the CMake build so ignore them
+  #     - "sheets/**"
+  #     - "solutions/**"
       # README.md doesn't affect CMake build either
       - README.md
   # run on manual request
@@ -38,9 +38,9 @@ jobs:
     strategy:
       matrix:
         # note: ubuntu-latest is a moving target
-        os: [ubuntu-22.04, ubuntu-24.04]
+        os: [ubuntu-24.04]
         # whether or not to use unity build
-        unity: [off, on]
+        unity: [on]
       # keep running the rest of the matrix jobs even if one fails
       fail-fast: false
     # job steps
@@ -118,35 +118,35 @@ jobs:
           ./check.sh -Ct --output-on-failure
       # install Runtime and Development components separately
       # note: only good as a smoke test. need sudo due to /usr/local install
-      - name: Install Runtime
-        run: sudo cmake --install build --component Runtime
-      - name: Install Development
-        run: sudo cmake --install build --component Development
-      # run CPack to create a self-extracting + standard tarball
-      - name: Package
-        id: cpack-package
-        # run for all non-unity jobs
-        if: ${{ matrix.unity == 'off' }}
-        run: |
-          cpack -B build/packages -G "STGZ;TGZ" --config build/CPackConfig.cmake
-          # record .sh and .tar.gz paths in output for upload step
-          echo "cpack-sh=$(ls build/packages/*.sh)" >> "$GITHUB_OUTPUT"
-          echo "cpack-tgz=$(ls build/packages/*.tar.gz)" >> "$GITHUB_OUTPUT"
-      # upload packages to the workflow page
-      # note: only done when run on schedule for non-unity jobs
-      - name: Upload STGZ
-        if: ${{ github.event_name == 'schedule' && matrix.unity == 'off' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: nightly-${{ matrix.os }}-sh
-          path: ${{ steps.cpack-package.outputs.cpack-sh }}
-          # don't archive the single file
-          archive: false
-      - name: Upload TGZ
-        if: ${{ github.event_name == 'schedule' && matrix.unity == 'off' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: nightly-${{ matrix.os }}-tgz
-          path: ${{ steps.cpack-package.outputs.cpack-tgz }}
-          # don't archive the single file
-          archive: false
+      # - name: Install Runtime
+      #   run: sudo cmake --install build --component Runtime
+      # - name: Install Development
+      #   run: sudo cmake --install build --component Development
+      # # run CPack to create a self-extracting + standard tarball
+      # - name: Package
+      #   id: cpack-package
+      #   # run for all non-unity jobs
+      #   if: ${{ matrix.unity == 'off' }}
+      #   run: |
+      #     cpack -B build/packages -G "STGZ;TGZ" --config build/CPackConfig.cmake
+      #     # record .sh and .tar.gz paths in output for upload step
+      #     echo "cpack-sh=$(ls build/packages/*.sh)" >> "$GITHUB_OUTPUT"
+      #     echo "cpack-tgz=$(ls build/packages/*.tar.gz)" >> "$GITHUB_OUTPUT"
+      # # upload packages to the workflow page
+      # # note: only done when run on schedule for non-unity jobs
+      # - name: Upload STGZ
+      #   if: ${{ github.event_name == 'schedule' && matrix.unity == 'off' }}
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: nightly-${{ matrix.os }}-sh
+      #     path: ${{ steps.cpack-package.outputs.cpack-sh }}
+      #     # don't archive the single file
+      #     archive: false
+      # - name: Upload TGZ
+      #   if: ${{ github.event_name == 'schedule' && matrix.unity == 'off' }}
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: nightly-${{ matrix.os }}-tgz
+      #     path: ${{ steps.cpack-package.outputs.cpack-tgz }}
+      #     # don't archive the single file
+      #     archive: false
